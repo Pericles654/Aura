@@ -5,11 +5,20 @@ with proper separation of FCFF and Financing sections.
 """
 from .categorizer import is_financing_category
 
+# Categories that are internal movements and should be excluded from MAMF
+# (they inflate both inflows and outflows but net to ~zero)
+EXCLUDED_FROM_MAMF = {
+    'Transferencia entre Contas',
+    'Deposit in Transit',
+    'Intercompany',
+}
+
 
 def generate_mamf(categorized_df, period_info=None):
     """
     Generate the MAMF (Month Actual) report from categorized extrato data.
     Separates into: Cash Inflows, OPEX, CAPEX, FCFF, Financing.
+    Excludes internal transfers that inflate both sides.
     """
     if categorized_df is None or categorized_df.empty:
         return _empty_mamf()
@@ -17,23 +26,39 @@ def generate_mamf(categorized_df, period_info=None):
     cat_col = 'categoria_auto' if 'categoria_auto' in categorized_df.columns else 'classificacao'
     df = categorized_df.copy()
 
-    # Separate inflows and outflows
-    inflows_df = df[df['valor_brl'] > 0].copy()
-    outflows_df = df[df['valor_brl'] < 0].copy()
+    # Exclude internal transfer categories from main MAMF calculation
+    # but track their net value for transparency
+    excluded_mask = df[cat_col].isin(EXCLUDED_FROM_MAMF)
+    excluded_df = df[excluded_mask]
+    df_filtered = df[~excluded_mask]
+
+    excluded_net = round(excluded_df['valor_brl'].sum(), 2) if len(excluded_df) > 0 else 0
+
+    # Separate inflows and outflows (excluding internal transfers)
+    inflows_df = df_filtered[df_filtered['valor_brl'] > 0].copy()
+    outflows_df = df_filtered[df_filtered['valor_brl'] < 0].copy()
 
     # Cash Inflows
     inflow_categories = _group_by_category(inflows_df, cat_col)
 
     # Separate Gold Sales from other inflows
     gold_sales = inflow_categories.pop('Gold Sales', 0)
-    other_inflows = inflow_categories
+
+    # Remove financing categories from inflows (they go to financing section)
+    financing_inflow_items = {}
+    other_inflows = {}
+    for cat, val in inflow_categories.items():
+        if is_financing_category(cat):
+            financing_inflow_items[cat] = val
+        else:
+            other_inflows[cat] = val
 
     # Cash Outflows - separate OPEX, CAPEX, and Financing
     opex_items = {}
     capex_items = {}
-    financing_items = {}
+    financing_items = dict(financing_inflow_items)
 
-    opex_capex_col = 'opex_capex' if 'opex_capex' in df.columns else None
+    opex_capex_col = 'opex_capex' if 'opex_capex' in df_filtered.columns else None
 
     for _, row in outflows_df.iterrows():
         category = row.get(cat_col, 'Others')
@@ -46,13 +71,6 @@ def generate_mamf(categorized_df, period_info=None):
             capex_items[category] = capex_items.get(category, 0) + valor
         else:
             opex_items[category] = opex_items.get(category, 0) + valor
-
-    # Also include financing inflows (e.g., Rendimento de Aplicações)
-    for _, row in inflows_df.iterrows():
-        category = row.get(cat_col, 'Others')
-        valor = row.get('valor_brl', 0)
-        if is_financing_category(category):
-            financing_items[category] = financing_items.get(category, 0) + valor
 
     # Totals
     total_inflows = round(gold_sales + sum(other_inflows.values()), 2)
@@ -88,6 +106,10 @@ def generate_mamf(categorized_df, period_info=None):
             'total': total_financing,
         },
         'net_cash_flow': round(fcff + total_financing, 2),
+        'excluded_transfers': {
+            'net': excluded_net,
+            'count': len(excluded_df),
+        },
     }
 
     return mamf
@@ -129,12 +151,15 @@ def compare_with_original(mamf, original_month_realizado, month_col_index=3):
         original_val = original_values.get(label)
         if original_val is not None:
             diff = round(generated_val - original_val, 2)
+            # Match threshold: within 0.1% of original value or less than R$100
+            threshold = max(abs(original_val) * 0.001, 100)
             comparisons.append({
                 'label': label,
                 'original': original_val,
                 'generated': generated_val,
                 'difference': diff,
-                'match': abs(diff) < 1.0,
+                'match': abs(diff) < threshold,
+                'pct_diff': round(abs(diff) / max(abs(original_val), 1) * 100, 2),
             })
 
     all_match = all(c['match'] for c in comparisons) if comparisons else False

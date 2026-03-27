@@ -125,6 +125,50 @@ def _aggregate_extrato_daily(df):
     return {d: round(v, 2) for d, v in daily.items() if d is not None}
 
 
+def find_reversal_pairs(extrato_df):
+    """
+    Find debit/credit reversal pairs in the extrato (IFS baixa errors).
+    These are entries on the same date/bank with equal opposite values that cancel out.
+    As Michelle explained, these don't need to be removed since they net to zero.
+    """
+    if extrato_df is None or extrato_df.empty:
+        return []
+
+    reversals = []
+    if 'banco' not in extrato_df.columns or 'data' not in extrato_df.columns:
+        return reversals
+
+    for (banco, data_val), grp in extrato_df.groupby(['banco', 'data']):
+        if data_val is None:
+            continue
+        values = grp['valor_brl'].tolist()
+        textos = grp['texto'].tolist() if 'texto' in grp.columns else [''] * len(values)
+        indices = grp.index.tolist()
+        used = set()
+
+        for i in range(len(values)):
+            if i in used:
+                continue
+            for j in range(i + 1, len(values)):
+                if j in used:
+                    continue
+                if abs(values[i] + values[j]) < 0.01 and values[i] != 0:
+                    reversals.append({
+                        'banco': banco,
+                        'data': str(data_val),
+                        'valor': round(values[i], 2),
+                        'texto_debito': textos[i],
+                        'texto_credito': textos[j],
+                        'idx_a': indices[i],
+                        'idx_b': indices[j],
+                    })
+                    used.add(i)
+                    used.add(j)
+                    break
+
+    return reversals
+
+
 def get_unmatched_entries(razao_df, extrato_df, target_date):
     """Get detailed entries for a specific date where there's a discrepancy."""
     razao_day = razao_df[razao_df['data'] == target_date] if 'data' in razao_df.columns else pd.DataFrame()

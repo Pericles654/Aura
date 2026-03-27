@@ -26,16 +26,17 @@ BANK_ACCOUNTS = {
 }
 
 DE_PARA_CONTAS = {
-    '1000001': 'SANT',
+    '1000001': 'SANTANDER OPEX',
     '1000002': 'BB',
-    '1000006': ' ITAÚ NASSAU',
+    '1000006': 'ITAÚ NASSAU',
     '1000007': 'BRADESCO C/C NOVA',
     '1000010': 'SANT',
     '1000011': 'BRADESCO TRIANON',
+    '1000012': 'BANCO DO NORDESTE',
     '1100003': 'CONTAMAX SANTANDER',
     '1100014': 'BRADESCO INVESTFACIL',
     '1100015': 'BRADESCO CDB NOVO',
-    '1100016': 'BB',
+    '1100016': 'BB RENDE FACIL',
     '1100018': 'APLICAÇÃO CONTA OPEX',
 }
 
@@ -46,11 +47,15 @@ def read_excel_file(filepath):
     sheet_names = wb.sheetnames
     wb.close()
 
+    period = get_period_from_filename(filepath)
+
     result = {
         'filepath': filepath,
         'sheet_names': sheet_names,
+        'period': period,
         'razao': None,
         'extrato': None,
+        'extrato_all': None,
         'month_realizado': None,
         'classificacao': None,
         'base_de_dados': None,
@@ -59,7 +64,9 @@ def read_excel_file(filepath):
     }
 
     result['razao'] = read_razao_contabil(filepath)
-    result['extrato'] = read_relatorio_analitico(filepath, sheet_names)
+    result['extrato_all'] = read_relatorio_analitico(filepath, sheet_names)
+    # Filter extrato to only the period-matching sheet
+    result['extrato'] = _filter_extrato_by_period(result['extrato_all'], period, sheet_names)
     result['month_realizado'] = read_month_realizado(filepath)
     result['classificacao'] = read_classificacao(filepath)
     result['base_de_dados'] = read_base_de_dados(filepath)
@@ -324,3 +331,29 @@ def get_period_from_filename(filepath):
                 if str(year) in name:
                     return {'month': month_num, 'year': year, 'month_name': month_name.capitalize()}
     return {'month': None, 'year': None, 'month_name': 'Desconhecido'}
+
+
+def _filter_extrato_by_period(extrato_all, period, sheet_names):
+    """
+    Filter extrato to only use the sheet matching the file's period.
+    E.g., for Janeiro, use 'Relatório Analítico IFS 01'.
+    Falls back to all data if no match found.
+    """
+    if extrato_all is None or extrato_all.empty:
+        return extrato_all
+
+    month = period.get('month')
+    if month is None:
+        return extrato_all
+
+    # Try to find the matching sheet: IFS 01 for month 1, IFS 02 for month 2, etc.
+    target_suffix = f"{month:02d}"
+    target_sheet = f"Relatório Analítico IFS {target_suffix}"
+
+    if 'sheet_origem' in extrato_all.columns:
+        matching = extrato_all[extrato_all['sheet_origem'] == target_sheet]
+        if len(matching) > 0:
+            return matching.copy()
+
+    # Fallback: return all data
+    return extrato_all
