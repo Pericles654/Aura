@@ -53,6 +53,7 @@ def read_excel_file(filepath):
         'extrato': None,
         'month_realizado': None,
         'classificacao': None,
+        'base_de_dados': None,
         'dimensao_cash': None,
         'check': None,
     }
@@ -61,8 +62,17 @@ def read_excel_file(filepath):
     result['extrato'] = read_relatorio_analitico(filepath, sheet_names)
     result['month_realizado'] = read_month_realizado(filepath)
     result['classificacao'] = read_classificacao(filepath)
+    result['base_de_dados'] = read_base_de_dados(filepath)
     result['dimensao_cash'] = read_dimensao_cash(filepath)
     result['check'] = read_check(filepath)
+
+    # Merge classificacao with base_de_dados (base_de_dados is more complete)
+    if result['base_de_dados'] and result['classificacao']:
+        merged = dict(result['base_de_dados'])
+        merged.update(result['classificacao'])
+        result['classificacao'] = merged
+    elif result['base_de_dados']:
+        result['classificacao'] = result['base_de_dados']
 
     return result
 
@@ -224,6 +234,28 @@ def read_classificacao(filepath):
     """Read the Classificação sheet - supplier classification rules."""
     wb = openpyxl.load_workbook(filepath, data_only=True, read_only=True)
     ws = wb['Classificação']
+
+    rules = {}
+    for i, row in enumerate(ws.iter_rows(values_only=True)):
+        if i == 0:
+            continue
+        fornecedor = str(row[0]).strip() if row[0] else None
+        classificacao = str(row[1]).strip() if row[1] else None
+        if fornecedor and classificacao:
+            rules[fornecedor.upper()] = classificacao
+
+    wb.close()
+    return rules
+
+
+def read_base_de_dados(filepath):
+    """Read the Base de Dados sheet - master supplier classification (789 suppliers)."""
+    wb = openpyxl.load_workbook(filepath, data_only=True, read_only=True)
+    try:
+        ws = wb['Base de Dados']
+    except KeyError:
+        wb.close()
+        return {}
 
     rules = {}
     for i, row in enumerate(ws.iter_rows(values_only=True)):
