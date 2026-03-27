@@ -124,6 +124,30 @@ def _match_financing(fornecedor, texto):
     return 'Others'
 
 
+CATEGORY_NORMALIZATION = {
+    'Mão de obra': 'Mão de Obra',
+    'mão de obra': 'Mão de Obra',
+    'Rendimento de aplicações': 'Rendimento de Aplicações',
+    'rendimento de aplicações': 'Rendimento de Aplicações',
+    'Taxas e impostos': 'Taxas e Impostos',
+    'Transferencia entre contas': 'Transferencia entre Contas',
+    'Contratos operacionais': 'Contratos Operacionais',
+    'Materiais operacionais': 'Materiais Operacionais',
+    'Materiais de manutenção': 'Materiais de Manutenção',
+    'Materiais de construção': 'Materiais de Construção',
+    'Consultorias e assessorias': 'Consultorias e Assessorias',
+    'Energia eletrica - Consumo': 'Energia Eletrica - Consumo',
+    'Energia eletrica - consumo': 'Energia Eletrica - Consumo',
+}
+
+
+def normalize_category(category):
+    """Normalize category names to avoid duplicates from casing differences."""
+    if not category:
+        return 'Others'
+    return CATEGORY_NORMALIZATION.get(category, category)
+
+
 def categorize_extrato(extrato_df, supplier_rules, account_rules, custom_rules=None):
     """Categorize all transactions in the extrato DataFrame."""
     if extrato_df is None or extrato_df.empty:
@@ -134,9 +158,17 @@ def categorize_extrato(extrato_df, supplier_rules, account_rules, custom_rules=N
 
     df = extrato_df.copy()
     df['categoria_auto'] = df.apply(
-        lambda row: categorize_transaction(row, supplier_rules, account_rules, custom_rules),
+        lambda row: normalize_category(
+            categorize_transaction(row, supplier_rules, account_rules, custom_rules)
+        ),
         axis=1
     )
+
+    # Also normalize the existing classificacao column
+    if 'classificacao' in df.columns:
+        df['classificacao'] = df['classificacao'].apply(
+            lambda x: normalize_category(x) if x else x
+        )
 
     return df
 
