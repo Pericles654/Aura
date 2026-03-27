@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aura CashFlow{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/">Aura CashFlow</a>
+        </div>
+        <div class="nav-links">
+            <a href="/">Dashboard</a>
+            {% if filename is defined %}
+            <a href="/analyze/{{ filename }}">Análise</a>
+            <a href="/reconciliation/{{ filename }}">Conciliação</a>
+            <a href="/categorization/{{ filename }}">Categorização</a>
+            <a href="/mamf/{{ filename }}">MAMF</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

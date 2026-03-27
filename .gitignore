@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+data/custom_rules.json

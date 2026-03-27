@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Categorização - {{ period.month_name }} {{ period.year }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Categorização de Transações - {{ period.month_name }} {{ period.year }}</h1>
+    <p>Gerencie regras de categorização automática</p>
+</div>
+
+<!-- Add Custom Rule -->
+<div class="card">
+    <h2>Adicionar Regra de Categorização</h2>
+    <p>Sempre que aparecer o padrão informado no fornecedor ou texto, categorize como a categoria informada.</p>
+    <form id="add-rule-form" class="rule-form">
+        <div class="form-group">
+            <label>Padrão (fornecedor ou texto):</label>
+            <input type="text" id="rule-pattern" placeholder="Ex: PETROBAHIA" required>
+        </div>
+        <div class="form-group">
+            <label>Categoria:</label>
+            <input type="text" id="rule-category" placeholder="Ex: Diesel" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Adicionar Regra</button>
+    </form>
+</div>
+
+<!-- Current Custom Rules -->
+<div class="card">
+    <h2>Regras Customizadas Ativas</h2>
+    <div id="custom-rules-list">
+        {% if custom_rules %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Padrão</th>
+                    <th>Categoria</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pattern, category in custom_rules.items() %}
+                <tr>
+                    <td>{{ pattern }}</td>
+                    <td>{{ category }}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="deleteRule('{{ pattern }}')">Remover</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-state">Nenhuma regra customizada. As regras padrão da planilha "Classificação" estão sendo usadas.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Category Summary -->
+<div class="card">
+    <h2>Resumo por Categoria</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Categoria</th>
+                <th>Quantidade</th>
+                <th>Total (BRL)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cat in categories %}
+            <tr>
+                <td>{{ cat.categoria }}</td>
+                <td class="num">{{ cat.count }}</td>
+                <td class="num {% if cat.total_brl < 0 %}negative{% else %}positive{% endif %}">
+                    {{ cat.total_brl | brl }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Uncategorized Entries -->
+{% if others %}
+<div class="card">
+    <h2>Transações Classificadas como "Others" (para revisão)</h2>
+    <p>Estas transações foram classificadas como "Others". Crie regras acima para reclassificá-las.</p>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Banco</th>
+                <th>Fornecedor</th>
+                <th>Texto</th>
+                <th>Valor (BRL)</th>
+                <th>Tipo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in others %}
+            <tr>
+                <td>{{ entry.banco }}</td>
+                <td>{{ entry.fornecedor }}</td>
+                <td>{{ entry.texto }}</td>
+                <td class="num">{{ entry.valor_brl | brl }}</td>
+                <td>{{ entry.entrada_saida }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('add-rule-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const pattern = document.getElementById('rule-pattern').value;
+    const category = document.getElementById('rule-category').value;
+
+    fetch('/api/custom-rules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pattern, category })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Erro ao adicionar regra');
+        }
+    });
+});
+
+function deleteRule(pattern) {
+    if (!confirm('Remover regra "' + pattern + '"?')) return;
+    fetch('/api/custom-rules', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pattern })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) location.reload();
+    });
+}
+</script>
+{% endblock %}

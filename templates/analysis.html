@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Análise - {{ period.month_name }} {{ period.year }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Análise - {{ period.month_name }} {{ period.year }}</h1>
+    <p>{{ filename }}</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Total Entradas</div>
+        <div class="kpi-value positive">{{ mamf.inflows.total | brl }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Total Saídas</div>
+        <div class="kpi-value negative">{{ mamf.total_outflows | brl }}</div>
+    </div>
+    <div class="kpi-card {% if mamf.fcff >= 0 %}kpi-positive{% else %}kpi-negative{% endif %}">
+        <div class="kpi-label">Free Cash Flow to Firm</div>
+        <div class="kpi-value">{{ mamf.fcff | brl }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Financing</div>
+        <div class="kpi-value">{{ mamf.financing.total | brl }}</div>
+    </div>
+</div>
+
+<!-- Reconciliation Status -->
+<div class="card">
+    <h2>Status da Conciliação</h2>
+    <div class="status-bar">
+        <span class="status-badge {% if reconciliation.status == 'CONCILIADO' %}status-ok{% else %}status-pending{% endif %}">
+            {{ reconciliation.status }}
+        </span>
+        <span>{{ reconciliation.summary.percentual_conciliado }}% dos dias conciliados</span>
+        <span>Razão: {{ reconciliation.summary.total_razao | brl }}</span>
+        <span>Extrato: {{ reconciliation.summary.total_extrato | brl }}</span>
+        <span>Diferença: {{ reconciliation.summary.diferenca_total | brl }}</span>
+    </div>
+    <a href="/reconciliation/{{ filename }}" class="btn btn-secondary">Ver Detalhes</a>
+</div>
+
+<!-- Bank Reconciliation Summary -->
+<div class="card">
+    <h2>Conciliação por Banco</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Banco</th>
+                <th>Conta</th>
+                <th>Razão</th>
+                <th>Extrato</th>
+                <th>Diferença</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for banco, rec in rec_by_bank.items() %}
+            <tr>
+                <td>{{ banco }}</td>
+                <td>{{ rec.conta }}</td>
+                <td class="num">{{ rec.summary.total_razao | brl }}</td>
+                <td class="num">{{ rec.summary.total_extrato | brl }}</td>
+                <td class="num {% if rec.summary.diferenca_total != 0 %}negative{% endif %}">
+                    {{ rec.summary.diferenca_total | brl }}
+                </td>
+                <td>
+                    <span class="status-badge {% if rec.status == 'CONCILIADO' %}status-ok{% else %}status-pending{% endif %}">
+                        {{ rec.status }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- MAMF Comparison -->
+{% if comparison.comparisons %}
+<div class="card">
+    <h2>Validação MAMF - Comparação com Original</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Indicador</th>
+                <th>Original</th>
+                <th>Gerado</th>
+                <th>Diferença</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in comparison.comparisons %}
+            <tr>
+                <td>{{ c.label }}</td>
+                <td class="num">{{ c.original | brl }}</td>
+                <td class="num">{{ c.generated | brl }}</td>
+                <td class="num {% if not c.match %}negative{% endif %}">{{ c.difference | brl }}</td>
+                <td>
+                    <span class="status-badge {% if c.match %}status-ok{% else %}status-pending{% endif %}">
+                        {% if c.match %}OK{% else %}DIVERGE{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Category Summary -->
+<div class="card">
+    <h2>Resumo por Categoria</h2>
+    <a href="/categorization/{{ filename }}" class="btn btn-secondary" style="margin-bottom:16px;display:inline-block;">Gerenciar Regras</a>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Categoria</th>
+                <th>Quantidade</th>
+                <th>Total (BRL)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cat in categories %}
+            <tr>
+                <td>{{ cat.categoria }}</td>
+                <td class="num">{{ cat.count }}</td>
+                <td class="num {% if cat.total_brl < 0 %}negative{% else %}positive{% endif %}">
+                    {{ cat.total_brl | brl }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Informações do Arquivo</h2>
+    <div class="info-grid">
+        <div><strong>Linhas no Razão:</strong> {{ razao_count }}</div>
+        <div><strong>Linhas no Extrato:</strong> {{ extrato_count }}</div>
+        <div><strong>Regras de Classificação:</strong> {{ categories | length }} categorias</div>
+    </div>
+</div>
+{% endblock %}

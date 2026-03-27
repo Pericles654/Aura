@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Conciliação - {{ period.month_name }} {{ period.year }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Conciliação Bancária - {{ period.month_name }} {{ period.year }}</h1>
+    <p>Razão Contábil vs Relatório Analítico (Extrato Bancário)</p>
+</div>
+
+<!-- Overall Status -->
+<div class="kpi-grid">
+    <div class="kpi-card {% if reconciliation.status == 'CONCILIADO' %}kpi-positive{% else %}kpi-negative{% endif %}">
+        <div class="kpi-label">Status Geral</div>
+        <div class="kpi-value">{{ reconciliation.status }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Dias Conciliados</div>
+        <div class="kpi-value">{{ reconciliation.summary.percentual_conciliado }}%</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Diferença Total</div>
+        <div class="kpi-value">{{ reconciliation.summary.diferenca_total | brl }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Dias com Diferença</div>
+        <div class="kpi-value">{{ reconciliation.summary.dias_com_diferenca }} / {{ reconciliation.summary.dias_total }}</div>
+    </div>
+</div>
+
+<!-- Daily Reconciliation -->
+<div class="card">
+    <h2>Conciliação Dia a Dia</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Razão (Movimento)</th>
+                <th>Extrato (Movimento)</th>
+                <th>Diferença</th>
+                <th>Razão (Acumulado)</th>
+                <th>Extrato (Acumulado)</th>
+                <th>Diferença Acum.</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in reconciliation.daily %}
+            <tr class="{% if not row.conciliado %}row-warning{% endif %}">
+                <td>{{ row.data }}</td>
+                <td class="num">{{ row.razao_movimento | brl }}</td>
+                <td class="num">{{ row.extrato_movimento | brl }}</td>
+                <td class="num {% if row.diferenca != 0 %}negative{% endif %}">{{ row.diferenca | brl }}</td>
+                <td class="num">{{ row.razao_acumulado | brl }}</td>
+                <td class="num">{{ row.extrato_acumulado | brl }}</td>
+                <td class="num {% if row.diferenca_acumulada != 0 %}negative{% endif %}">{{ row.diferenca_acumulada | brl }}</td>
+                <td>
+                    <span class="status-badge {% if row.conciliado %}status-ok{% else %}status-pending{% endif %}">
+                        {% if row.conciliado %}OK{% else %}PENDENTE{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Bank by Bank -->
+<div class="card">
+    <h2>Conciliação por Banco</h2>
+    {% for banco, rec in rec_by_bank.items() %}
+    <div class="bank-section">
+        <h3>
+            {{ banco }}
+            <span class="status-badge {% if rec.status == 'CONCILIADO' %}status-ok{% else %}status-pending{% endif %}">
+                {{ rec.status }}
+            </span>
+        </h3>
+        <div class="info-grid">
+            <div><strong>Razão:</strong> {{ rec.summary.total_razao | brl }}</div>
+            <div><strong>Extrato:</strong> {{ rec.summary.total_extrato | brl }}</div>
+            <div><strong>Diferença:</strong> {{ rec.summary.diferenca_total | brl }}</div>
+        </div>
+
+        {% if rec.discrepancies %}
+        <table class="data-table compact">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Razão</th>
+                    <th>Extrato</th>
+                    <th>Diferença</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in rec.discrepancies %}
+                <tr>
+                    <td>{{ d.data }}</td>
+                    <td class="num">{{ d.razao_movimento | brl }}</td>
+                    <td class="num">{{ d.extrato_movimento | brl }}</td>
+                    <td class="num negative">{{ d.diferenca | brl }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="success-msg">Todas as datas estão conciliadas.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

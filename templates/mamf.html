@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}MAMF - {{ period.month_name }} {{ period.year }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>MAMF Realizada - {{ period.month_name }} {{ period.year }}</h1>
+    <p>Cash Flow Report - Free Cash Flow to Firm</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card kpi-positive">
+        <div class="kpi-label">Total Entradas</div>
+        <div class="kpi-value">{{ mamf.inflows.total | brl }}</div>
+    </div>
+    <div class="kpi-card kpi-negative">
+        <div class="kpi-label">Total Saídas</div>
+        <div class="kpi-value">{{ mamf.total_outflows | brl }}</div>
+    </div>
+    <div class="kpi-card {% if mamf.fcff >= 0 %}kpi-positive{% else %}kpi-negative{% endif %}">
+        <div class="kpi-label">Free Cash Flow to Firm</div>
+        <div class="kpi-value">{{ mamf.fcff | brl }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Cash Flow Líquido</div>
+        <div class="kpi-value">{{ mamf.net_cash_flow | brl }}</div>
+    </div>
+</div>
+
+<!-- MAMF Report -->
+<div class="card">
+    <h2>Cash Inflows</h2>
+    <table class="data-table mamf-table">
+        <tbody>
+            <tr class="row-highlight">
+                <td><strong>Gold Sales</strong></td>
+                <td class="num positive"><strong>{{ mamf.inflows.gold_sales | brl }}</strong></td>
+            </tr>
+            {% for name, val in mamf.inflows.other_detail.items() %}
+            <tr>
+                <td>{{ name }}</td>
+                <td class="num">{{ val | brl }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="row-total">
+                <td><strong>(a) Total Cash Inflows</strong></td>
+                <td class="num positive"><strong>{{ mamf.inflows.total | brl }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>OPEX</h2>
+    <table class="data-table mamf-table">
+        <tbody>
+            {% for name, val in mamf.opex.detail.items() %}
+            <tr>
+                <td>{{ name }}</td>
+                <td class="num negative">{{ val | brl }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="row-total">
+                <td><strong>(b) Total OPEX</strong></td>
+                <td class="num negative"><strong>{{ mamf.opex.total | brl }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>CAPEX</h2>
+    <table class="data-table mamf-table">
+        <tbody>
+            {% for name, val in mamf.capex.detail.items() %}
+            <tr>
+                <td>{{ name }}</td>
+                <td class="num negative">{{ val | brl }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="row-total">
+                <td><strong>(d) Total CAPEX</strong></td>
+                <td class="num negative"><strong>{{ mamf.capex.total | brl }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- FCFF -->
+<div class="card fcff-card">
+    <table class="data-table mamf-table">
+        <tbody>
+            <tr class="row-total">
+                <td><strong>Total Cash Outflow (b + c + d)</strong></td>
+                <td class="num negative"><strong>{{ mamf.total_outflows | brl }}</strong></td>
+            </tr>
+            <tr class="row-fcff">
+                <td><strong>(e) FREE CASH FLOW TO FIRM (a + b + c + d)</strong></td>
+                <td class="num {% if mamf.fcff >= 0 %}positive{% else %}negative{% endif %}">
+                    <strong>{{ mamf.fcff | brl }}</strong>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Financing -->
+<div class="card">
+    <h2>Financing (abaixo do FCFF)</h2>
+    <table class="data-table mamf-table">
+        <tbody>
+            {% for name, val in mamf.financing.detail.items() %}
+            <tr>
+                <td>{{ name }}</td>
+                <td class="num {% if val < 0 %}negative{% else %}positive{% endif %}">{{ val | brl }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="row-total">
+                <td><strong>(f) Total Financing</strong></td>
+                <td class="num"><strong>{{ mamf.financing.total | brl }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Comparison with Original -->
+{% if comparison.comparisons %}
+<div class="card">
+    <h2>Validação - Comparação com Planilha Original</h2>
+    <div class="status-bar">
+        <span class="status-badge {% if comparison.match %}status-ok{% else %}status-pending{% endif %}">
+            {% if comparison.match %}TODOS BATEM{% else %}DIVERGÊNCIAS ENCONTRADAS{% endif %}
+        </span>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Indicador</th>
+                <th>Original</th>
+                <th>Gerado</th>
+                <th>Diferença</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in comparison.comparisons %}
+            <tr>
+                <td>{{ c.label }}</td>
+                <td class="num">{{ c.original | brl }}</td>
+                <td class="num">{{ c.generated | brl }}</td>
+                <td class="num">{{ c.difference | brl }}</td>
+                <td>
+                    <span class="status-badge {% if c.match %}status-ok{% else %}status-pending{% endif %}">
+                        {% if c.match %}OK{% else %}DIVERGE{% endif %}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

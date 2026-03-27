@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Aura CashFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Aura CashFlow - Dashboard</h1>
+    <p>Sistema de Conciliação Bancária e Cash Flow</p>
+</div>
+
+<div class="card">
+    <h2>Upload de Arquivo</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+        <input type="file" name="file" accept=".xlsx" required>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Arquivos Disponíveis</h2>
+    {% if files %}
+    <div class="file-grid">
+        {% for f in files %}
+        <div class="file-card">
+            <div class="file-icon">📊</div>
+            <div class="file-info">
+                <h3>{{ f.name }}</h3>
+                {% if f.period.month_name %}
+                <span class="badge">{{ f.period.month_name }} {{ f.period.year }}</span>
+                {% endif %}
+            </div>
+            <a href="/analyze/{{ f.name }}" class="btn btn-primary">Analisar</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">Nenhum arquivo encontrado. Faça upload de um arquivo Excel (.xlsx) para começar.</p>
+    {% endif %}
+</div>
+{% endblock %}
