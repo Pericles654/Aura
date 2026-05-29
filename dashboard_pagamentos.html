@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura · Pagamentos 28.05.2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#2D3D70; --coral:#FD5444; --teal:#00A195; --gray:#AAB1BB;
+    --ink:#2D3D70; --muted:#7E8693; --line:#E9EBF0; --bg:#F4F5F8; --card:#FFFFFF;
+    --c1:#2D3D70; --c2:#3F4E8A; --c3:#6B79C0; --c4:#E8765A; --c5:#9D8C77;
+    --c6:#E2D7C0; --c7:#C7C9CC; --c8:#7F8184; --c9:#D83A33;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{font-family:'Montserrat',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;padding:40px 20px 64px}
+  .wrap{max-width:1180px;margin:0 auto}
+
+  /* ---------- Header ---------- */
+  .top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:24px;margin-bottom:8px}
+  .title h1{font-size:34px;font-weight:800;letter-spacing:-.6px;line-height:1.05}
+  .title h1 .accent{color:var(--coral)}
+  .title p{color:var(--muted);font-weight:500;font-size:14px;margin-top:6px;letter-spacing:.2px}
+  .logo{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+  .logo .mark{display:flex;align-items:flex-start;gap:6px}
+  .logo .word{font-size:40px;font-weight:600;color:var(--navy);letter-spacing:-1px;line-height:.8}
+  .logo svg{margin-top:2px}
+  .logo .sub{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--coral);margin-right:2px}
+
+  .rule{height:5px;border-radius:5px;margin:18px 0 30px;
+    background:linear-gradient(90deg,var(--navy) 0%,var(--c3) 35%,var(--teal) 60%,var(--coral) 100%)}
+
+  /* ---------- KPI cards ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:14px}
+  .kpi{background:var(--card);border-radius:16px;padding:22px 24px;border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(45,61,112,.04),0 8px 24px rgba(45,61,112,.05)}
+  .kpi .lab{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .kpi .val{font-size:27px;font-weight:800;letter-spacing:-.5px;margin-top:8px}
+  .kpi .meta{font-size:12px;color:var(--muted);font-weight:500;margin-top:6px}
+  .kpi.k1{border-top:4px solid var(--navy)}
+  .kpi.k2{border-top:4px solid var(--coral)}
+  .kpi.k2 .val{color:var(--coral)}
+  .kpi.k3{border-top:4px solid var(--teal)}
+  .kpi.k3 .val{color:var(--teal)}
+
+  .note{font-size:12px;color:var(--muted);font-weight:500;margin:4px 2px 30px;display:flex;gap:8px;align-items:flex-start}
+  .note b{color:var(--navy)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--coral);margin-top:6px;flex:none}
+
+  /* ---------- Section ---------- */
+  .sec-h{display:flex;align-items:center;gap:12px;margin:34px 0 18px}
+  .sec-h h2{font-size:18px;font-weight:700;letter-spacing:-.2px}
+  .sec-h .bar{width:34px;height:4px;border-radius:4px;background:var(--coral)}
+
+  .grid2{display:grid;grid-template-columns:1.25fr .9fr;gap:22px;align-items:start}
+  .panel{background:var(--card);border-radius:16px;padding:24px 26px;border:1px solid var(--line);
+    box-shadow:0 1px 2px rgba(45,61,112,.04),0 8px 24px rgba(45,61,112,.05)}
+  .panel h3{font-size:13px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--navy);margin-bottom:20px}
+
+  /* ---------- Horizontal bars ---------- */
+  .bars{display:flex;flex-direction:column;gap:15px}
+  .brow .blab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:5px;gap:10px}
+  .brow .blab .nm{color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brow .blab .vl{color:var(--muted);font-weight:600;flex:none}
+  .track{height:9px;background:#EFF1F5;border-radius:6px;overflow:hidden}
+  .fill{height:100%;border-radius:6px;background:var(--navy)}
+
+  /* ---------- Donut ---------- */
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
+  .legend{width:100%;display:flex;flex-direction:column;gap:9px}
+  .leg{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600}
+  .leg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+  .leg .nm{color:var(--navy);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .leg .pc{color:var(--muted)}
+
+  /* ---------- Table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);
+    text-align:left;padding:0 14px 12px;border-bottom:2px solid var(--line)}
+  thead th.r,tbody td.r{text-align:right}
+  tbody td{padding:13px 14px;border-bottom:1px solid var(--line);font-weight:600;color:var(--navy)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#FAFBFC}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+  .chip .cdot{width:9px;height:9px;border-radius:50%;flex:none}
+  td .mut{color:var(--muted);font-weight:500;font-size:12px}
+  tr.tot td{border-top:2px solid var(--navy);border-bottom:none;font-weight:800;color:var(--navy);padding-top:15px}
+  tr.tot td.r{color:var(--coral)}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(0,161,149,.1);color:var(--teal)}
+
+  footer{margin-top:40px;text-align:center;font-size:11px;color:var(--gray);font-weight:500;letter-spacing:.3px}
+
+  @media(max-width:880px){.kpis{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.title h1{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="top">
+    <div class="title">
+      <h1>Painel de <span class="accent">Pagamentos</span></h1>
+      <p>Posição financeira consolidada · 28 de maio de 2026</p>
+    </div>
+    <div class="logo">
+      <div class="mark">
+        <span class="word">aura</span>
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <circle cx="14" cy="14" r="10" stroke="#FD5444" stroke-width="4"/>
+          <circle cx="29" cy="29" r="4" fill="#FD5444"/>
+        </svg>
+      </div>
+      <span class="sub">BORBOREMA</span>
+    </div>
+  </div>
+  <div class="rule"></div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi k1">
+      <div class="lab">Saldo em conta</div>
+      <div class="val">R$ 33,83 mi</div>
+      <div class="meta">5 contas operacionais · R$ 33.827.472,60</div>
+    </div>
+    <div class="kpi k2">
+      <div class="lab">Agendamentos do dia</div>
+      <div class="val">R$ 1,34 mi</div>
+      <div class="meta">12 títulos · R$ 1.341.215,91</div>
+    </div>
+    <div class="kpi k3">
+      <div class="lab">Saldo previsto</div>
+      <div class="val">R$ 32,49 mi</div>
+      <div class="meta">Após liquidação · R$ 32.486.256,69</div>
+    </div>
+  </div>
+  <div class="note"><span class="dot"></span><div><b>Nota:</b> os indicadores acima refletem as 5 contas do fluxo do dia. A carteira <b>CASCAR&nbsp;–&nbsp;OPEX</b> (245 títulos, R$ 17,92 mi) é apresentada à parte na seção final por se tratar de um backlog de OPEX detalhado.</div></div>
+
+  <!-- CONTAS -->
+  <div class="sec-h"><span class="bar"></span><h2>Contas &amp; Agendamentos</h2></div>
+  <div class="panel">
+    <table>
+      <thead>
+        <tr><th>Conta bancária</th><th class="r">Saldo inicial</th><th class="r">Agendamentos</th><th class="r">Saldo previsto</th><th class="r">Títulos</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="chip"><span class="cdot" style="background:var(--c1)"></span>BRADESCO – CASCAR</span><div class="mut">Folha de pagamento</div></td><td class="r">2.131.981,83</td><td class="r">1.334.493,25</td><td class="r">797.488,58</td><td class="r">1</td></tr>
+        <tr><td><span class="chip"><span class="cdot" style="background:var(--c3)"></span>SANTANDER – OPEX</span><div class="mut">Despesas operacionais</div></td><td class="r">30.255.091,99</td><td class="r">2.456,96</td><td class="r">30.252.635,03</td><td class="r">2</td></tr>
+        <tr><td><span class="chip"><span class="cdot" style="background:var(--teal)"></span>CRUSADER – BRASIL</span><div class="mut">Tributos &amp; serviços</div></td><td class="r">942.888,79</td><td class="r">1.666,22</td><td class="r">941.222,57</td><td class="r">6</td></tr>
+        <tr><td><span class="chip"><span class="cdot" style="background:var(--coral)"></span>BB – CASCAR</span><div class="mut">Ministério da Fazenda</div></td><td class="r">288.443,51</td><td class="r">1.956,01</td><td class="r">286.487,50</td><td class="r">1</td></tr>
+        <tr><td><span class="chip"><span class="cdot" style="background:var(--c5)"></span>CRUSADER – NORDESTE</span><div class="mut">Facil Informática</div></td><td class="r">209.066,48</td><td class="r">643,47</td><td class="r">208.423,01</td><td class="r">2</td></tr>
+        <tr class="tot"><td>TOTAL</td><td class="r">33.827.472,60</td><td class="r">1.341.215,91</td><td class="r">32.486.256,69</td><td class="r">12</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- OPEX -->
+  <div class="sec-h"><span class="bar"></span><h2>Carteira CASCAR – OPEX <span class="pill" style="margin-left:6px">245 títulos · 125 fornecedores</span></h2></div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Top 10 fornecedores · R$ 17,92 mi</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="panel">
+      <h3>Concentração</h3>
+      <div class="donut-wrap">
+        <svg width="180" height="180" viewBox="0 0 42 42" id="donut">
+          <circle cx="21" cy="21" r="15.915" fill="none" stroke="#EFF1F5" stroke-width="7"/>
+        </svg>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Aura Borborema · Gerado em 29/05/2026 · Identidade visual conforme guia de marca (Montserrat · #2D3D70 · #FD5444 · #00A195)</footer>
+</div>
+
+<script>
+  const BRL = n => n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const topForn = [
+    ["Forponto Informática S/A",8436309.96],["Corps Siderurgia",1449018.18],
+    ["PH Intralogística e Serviços",1389183.79],["Atlas Copco Brasil",1270857.64],
+    ["Hold Transporte Pesado",435124.68],["Cosern (Energia RN)",393665.70],
+    ["TCPAV Tec. Construção",382056.80],["Coremal Com. Prod. Químicos",353047.51],
+    ["Andritz Separation",254399.14],["Metso Brasil",253104.63]
+  ];
+  const TOTAL = 17924102.18;
+  const colors = ['#2D3D70','#3F4E8A','#6B79C0','#E8765A','#9D8C77','#E2D7C0','#C7C9CC','#7F8184','#D83A33','#00A195'];
+  const max = topForn[0][1];
+
+  // bars
+  document.getElementById('bars').innerHTML = topForn.map((d,i)=>`
+    <div class="brow">
+      <div class="blab"><span class="nm">${d[0]}</span><span class="vl">R$ ${BRL(d[1])}</span></div>
+      <div class="track"><div class="fill" style="width:${(d[1]/max*100).toFixed(1)}%;background:${colors[i]}"></div></div>
+    </div>`).join('');
+
+  // donut: Forponto (47.1%), próximos 4 (28.9%), restante
+  const forponto = topForn[0][1];
+  const next4 = topForn.slice(1,5).reduce((s,d)=>s+d[1],0);
+  const rest = TOTAL - forponto - next4;
+  const segs = [
+    ["Forponto Informática", forponto, '#FD5444'],
+    ["Top 2–5", next4, '#2D3D70'],
+    ["Demais 120 fornec.", rest, '#AAB1BB']
+  ];
+  let cum = 0; // cumulative percent
+  const donut = document.getElementById('donut');
+  segs.forEach(s=>{
+    const pct = s[1]/TOTAL*100;
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',21);c.setAttribute('cy',21);c.setAttribute('r',15.915);
+    c.setAttribute('fill','none');c.setAttribute('stroke',s[2]);c.setAttribute('stroke-width',7);
+    c.setAttribute('stroke-dasharray',`${pct.toFixed(2)} ${(100-pct).toFixed(2)}`);
+    c.setAttribute('stroke-dashoffset',(25 - cum).toFixed(2)); // start at 12 o'clock
+    c.setAttribute('transform','rotate(0 21 21)');
+    donut.appendChild(c);
+    cum += pct;
+  });
+  document.getElementById('legend').innerHTML = segs.map(s=>`
+    <div class="leg"><span class="sw" style="background:${s[2]}"></span>
+    <span class="nm">${s[0]}</span><span class="pc">${(s[1]/TOTAL*100).toFixed(1)}%</span></div>`).join('');
+</script>
+</body>
+</html>
